@@ -91,7 +91,7 @@ def process_data(df):
 
     df['RATING_VALUE'] = df['RATING_VALUE'].map(lambda x: rating_value_dict[x]).astype(np.int8)
    
-    df['MARKETING_AGREEMENT'] = df['MARKETING_AGREEMENT'].map(lambda x: marketing_agreement_dict['XNA' if pd.isnull(x)
+    df['MARKETING_AGREEMENT'] = df['MARKETING_AGREEMENT'].map(lambda x: marketing_agreement_dict['X' if pd.isnull(x)
                                                                                                  else x]).astype(np.int8)
 
     df['ACCOUNT'] = (df.apply(lambda x: 6 if x['TOTAL'] != 0 else
