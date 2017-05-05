@@ -74,17 +74,15 @@ def process_data(df):
     df['GENDER'] = df['GENDER'].map(lambda x: gender_dict[x]).astype(np.int8)
     df['MARITAL_STATUS'] = df['MARITAL_STATUS'].map(lambda x: marital_status_dict[x]).astype(np.int8)
     df['SEGMENT'] = df['SEGMENT'].map(lambda x: segment_dict[x]).astype(np.int8)
-    df['SUBSEGMENT'] = df['SUBSEGMENT'].map(lambda x: subsegment_dict['XNA' if pd.isnull(x)
-                                                                      else x]).astype(np.int8)
-    df['EDUCATION'] = df['EDUCATION'].map(lambda x: education_dict['XNA' if pd.isnull(x) else x]).astype(np.int8)
+    df['SUBSEGMENT'] = df['SUBSEGMENT'].fillna('XNA').map(lambda x: subsegment_dict[x]).astype(np.int8)
+    df['EDUCATION'] = df['EDUCATION'].fillna('XNA').map(lambda x: education_dict[x]).astype(np.int8)
         
     df['BCR_EMPLOYEE'] = df['BCR_EMPLOYEE'].map(lambda x: bcr_employee_dict[x]).astype(np.int8)
     df['WORKOUT_FLAG'] = df['WORKOUT_FLAG'].map(lambda x: workout_flag_dict[x]).astype(np.int8)
 
     df['RATING_VALUE'] = df['RATING_VALUE'].map(lambda x: rating_value_dict[x]).astype(np.int8)
    
-    df['MARKETING_AGREEMENT'] = df['MARKETING_AGREEMENT'].map(lambda x: marketing_agreement_dict['X' if pd.isnull(x)
-                                                                                                 else x]).astype(np.int8)
+    df['MARKETING_AGREEMENT'] = df['MARKETING_AGREEMENT'].fillna('X').map(lambda x: marketing_agreement_dict[x]).astype(np.int8)
 
     df['ACCOUNT'] = 4
     df.loc[df['JUNIOR'] != 0, 'ACCOUNT'] = 1
@@ -104,7 +102,7 @@ def process_data(df):
               'DIRECT_DEBIT', 'STANDING_ORDER', 'TRANZACTII_POS', 'NET_BANKING']   
     df[c_int8] = df[c_int8].apply(np.int8)
 
-    df['PAD'] = df['PAD'].map(lambda x: -1 if np.isnan(x) else x).astype(np.int8)
+    df['PAD'] = df['PAD'].fillna(-1).astype(np.int8)
     
     c_int16 = ['BRANCH_CODE', 'CLIENT_DPD']
     df[c_int16] = df[c_int16].apply(np.uint16)
@@ -114,16 +112,16 @@ def process_data(df):
     c_float16 = ['CM1_A', 'CM1_L', 'NFC', 'BALANCE_MAX_CAS', 'BALANCE_AVG_CAS']   
     df[c_float16] = df[c_float16].apply(np.float16)
 
-    df['BALANCE_MIN_CA_3MONTHS'] = df['BALANCE_MIN_CA_3MONTHS'].map(lambda x: -1 if np.isnan(x) else x).astype(np.float16)
-    df['BALANCE_MAX_DEPOSITS_3MONTHS'] = df['BALANCE_MAX_DEPOSITS_3MONTHS'].map(lambda x: -1 if np.isnan(x) else x).astype(np.float16)
+    df['BALANCE_MIN_CA_3MONTHS'] = df['BALANCE_MIN_CA_3MONTHS'].fillna(-1).astype(np.float16)
+    df['BALANCE_MAX_DEPOSITS_3MONTHS'] = df['BALANCE_MAX_DEPOSITS_3MONTHS'].fillna(-1).astype(np.float16)
     
-    df['NO_SALARY'] = df['NO_SALARY'].map(lambda x: -1 if np.isnan(x) else x).astype(np.int8)
-    df['NO_CASH_LAST_MONTH'] = df['NO_CASH_LAST_MONTH'].map(lambda x: -1 if np.isnan(x) else x).astype(np.int8)
-    df['NO_OUTGOINGS_MONTH'] = df['NO_OUTGOINGS_MONTH'].map(lambda x: -1 if np.isnan(x) else x).astype(np.int8)
+    df['NO_SALARY'] = df['NO_SALARY'].fillna(-1).astype(np.int8)
+    df['NO_CASH_LAST_MONTH'] = df['NO_CASH_LAST_MONTH'].fillna(-1).astype(np.int8)
+    df['NO_OUTGOINGS_MONTH'] = df['NO_OUTGOINGS_MONTH'].fillna(-1).astype(np.int8)
 
-    df['SALARY'] = df['SALARY'].map(lambda x: -1 if np.isnan(x) else x).astype(np.float16)
-    df['CASH_LAST_MONTH'] = df['CASH_LAST_MONTH'].map(lambda x: -1 if np.isnan(x) else x).astype(np.float16)
-    df['OUTGOINGS_MONTH'] = df['OUTGOINGS_MONTH'].map(lambda x: -1 if np.isnan(x) else x).astype(np.float16)
+    df['SALARY'] = df['SALARY'].fillna(-1).astype(np.float16)
+    df['CASH_LAST_MONTH'] = df['CASH_LAST_MONTH'].fillna(-1).astype(np.float16)
+    df['OUTGOINGS_MONTH'] = df['OUTGOINGS_MONTH'].fillna(-1).astype(np.float16)
     
     return df
 
@@ -134,11 +132,11 @@ reader = pd.read_csv('../data/C_CLIENTS_V_DATA_VIEW.dsv',
                      sep=';', chunksize=100000,
                      parse_dates=['DAX'])
 
-#for chunk in reader:
-#    df = process_data(chunk)
-#    break
+for chunk in reader:
+    df = process_data(chunk)
+    break
     
-df = pd.concat([process_data(chunk) for chunk in reader])
+#df = pd.concat([process_data(chunk) for chunk in reader])
 
 print('Load time: ', timeit.default_timer() - tic0)
 
