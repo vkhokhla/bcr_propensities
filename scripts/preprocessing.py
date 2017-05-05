@@ -1,14 +1,6 @@
-
-# coding: utf-8
-
-# In[4]:
-
 import pandas as pd
 import numpy as np
 import timeit
-
-
-# In[5]:
 
 segment_dict = {'MM':1, 'MA':2, 'PB':3 }
 
@@ -59,8 +51,6 @@ rating_value_dict = {'N':-1, 'R':1, 'D2':2, 'D1':3, 'C2':4, 'C1':5, 'B2':6, 'B1'
 
 marketing_agreement_dict = {'X':-1, 'N':0, 'Y':1}
 
-
-# In[39]:
 
 def process_data(df):
     df['CIC'] = df['CIC'].astype(np.uint32)
@@ -134,11 +124,9 @@ def process_data(df):
     return df
 
 
-# In[40]:
-
 tic0 = timeit.default_timer()
 
-reader = pd.read_csv('../data/C_CLIENTS_DATA_TABLE.dsv', sep=';', chunksize=100000, parse_dates=[0])
+reader = pd.read_csv('../data/C_CLIENTS_V_DATA_VIEW.dsv', sep=';', chunksize=100000, parse_dates=[0])
 
 #for chunk in reader:
 #    df = process_data(chunk)
@@ -148,8 +136,8 @@ df = pd.concat([process_data(chunk) for chunk in reader])
 
 print('Load time: ', timeit.default_timer() - tic0)
 
+df.info()
 
-# In[54]:
 
 tic0 = timeit.default_timer()
 
@@ -160,14 +148,4 @@ for d in df['DAX'].unique():
     df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
 
 print('Save time: ', timeit.default_timer() - tic0)
-
-
-# In[55]:
-
-df.info()
-
-
-# In[24]:
-
-df.head()
 
