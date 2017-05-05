@@ -55,16 +55,18 @@ marketing_agreement_dict = {'X':-1, 'N':0, 'Y':1}
 def process_data(df):
     df['CIC'] = df['CIC'].astype(np.uint32)
     
-    df['AGE'] = (df.apply(lambda x: (x['DAX'].year - x['BIRTH_DATE'].year) * 12 +
-                                     x['DAX'].month - x['BIRTH_DATE'].month
-                                     if x['DAX'].year > 1900 else -1                 # data quality
+    df['AGE'] = (df.apply(lambda x: (x['DAX'].year - int(x['BIRTH_DATE'][:4])) * 12 +
+                                     x['DAX'].month - int(x['BIRTH_DATE'][5:7])
+                                     if not pd.isnull(x['BIRTH_DATE'])
+                                        and int(x['BIRTH_DATE'][:4]) > 1900
+                                     else -1                 # data quality
                           , axis=1).astype(np.int8))
     df.drop('BIRTH_DATE', axis = 1, inplace = True)
 
-    df['TENOR'] = (df.apply(lambda x: (x['DAX'].year - x['CLIENT_START_DATE'].year) * 12 +
-                                       x['DAX'].month - x['CLIENT_START_DATE'].month
-                                       if not pd.isnull(x['CLIENT_START_DATE']
-                                          and x['CLIENT_START_DATE'].year) >= 1990   # data quality
+    df['TENOR'] = (df.apply(lambda x: (x['DAX'].year - int(x['CLIENT_START_DATE'][:4])) * 12 +
+                                       x['DAX'].month - int(x['CLIENT_START_DATE'][5:7])
+                                       if not pd.isnull(x['CLIENT_START_DATE'])
+                                          and int(x['CLIENT_START_DATE'][:4]) >= 1990   # data quality
                                        else -1
                           , axis=1).astype(np.int8))
     df.drop('CLIENT_START_DATE', axis = 1, inplace = True)
@@ -130,13 +132,13 @@ tic0 = timeit.default_timer()
 
 reader = pd.read_csv('../data/C_CLIENTS_V_DATA_VIEW.dsv', 
                      sep=';', chunksize=100000,
-                     parse_dates=['DAX', 'BIRTH_DATE', 'CLIENT_START_DATE'])
+                     parse_dates=['DAX'])
 
-for chunk in reader:
-    df = process_data(chunk)
-    break
+#for chunk in reader:
+#    df = process_data(chunk)
+#    break
     
-#df = pd.concat([process_data(chunk) for chunk in reader])
+df = pd.concat([process_data(chunk) for chunk in reader])
 
 print('Load time: ', timeit.default_timer() - tic0)
 
