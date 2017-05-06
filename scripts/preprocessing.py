@@ -54,21 +54,19 @@ marketing_agreement_dict = {'X':-1, 'N':0, 'Y':1}
 
 def process_data(df):
     df['CIC'] = df['CIC'].astype(np.uint32)
-    
-    df['AGE'] = (df.apply(lambda x: (x['DAX'].year - int(x['BIRTH_DATE'][:4])) * 12 +
-                                     x['DAX'].month - int(x['BIRTH_DATE'][5:7])
-                                     if not pd.isnull(x['BIRTH_DATE'])
-                                        and int(x['BIRTH_DATE'][:4]) > 1900
-                                     else -1                 # data quality
-                          , axis=1).astype(np.int8))
+
+    df['BIRTH_DATE'] = pd.to_datetime(df['BIRTH_DATE'], errors='coerce', format='%Y-%m-%d')
+    df['AGE'] = (df.DAX.dt.year * 12 + df.DAX.dt.month -
+                 (df.BIRTH_DATE.dt.year * 12 + df.BIRTH_DATE.dt.month))
+    df.loc[df['BIRTH_DATE'].dt.year <= 1900, 'AGE'] = None              # data quality
+    df['AGE'] = df['AGE'].fillna(-1).astype(np.uint16)
     df.drop('BIRTH_DATE', axis = 1, inplace = True)
 
-    df['TENOR'] = (df.apply(lambda x: (x['DAX'].year - int(x['CLIENT_START_DATE'][:4])) * 12 +
-                                       x['DAX'].month - int(x['CLIENT_START_DATE'][5:7])
-                                       if not pd.isnull(x['CLIENT_START_DATE'])
-                                          and int(x['CLIENT_START_DATE'][:4]) >= 1990   # data quality
-                                       else -1
-                          , axis=1).astype(np.int8))
+    df['CLIENT_START_DATE'] = pd.to_datetime(df['CLIENT_START_DATE'], errors='coerce', format='%Y-%m-%d')
+    df['TENOR'] = ((df.DAX.dt.year - df.CLIENT_START_DATE.dt.year) * 12 +
+                   (df.DAX.dt.month - df.CLIENT_START_DATE.dt.month))
+    df.loc[df['CLIENT_START_DATE'].dt.year <= 1900, 'TENOR'] = None     # data quality
+    df['TENOR'] = df['TENOR'].fillna(-1).astype(np.uint16)
     df.drop('CLIENT_START_DATE', axis = 1, inplace = True)
     
     df['GENDER'] = df['GENDER'].map(lambda x: gender_dict[x]).astype(np.int8)
@@ -126,30 +124,36 @@ def process_data(df):
     return df
 
 
-tic0 = timeit.default_timer()
-
-reader = pd.read_csv('../data/C_CLIENTS_V_DATA_VIEW.dsv', 
-                     sep=';', chunksize=100000,
-                     parse_dates=['DAX'])
-
-for chunk in reader:
-    df = process_data(chunk)
-    break
+def main():
+    tic0 = timeit.default_timer()
     
-#df = pd.concat([process_data(chunk) for chunk in reader])
+    reader = pd.read_csv('../data/C_CLIENTS_V_DATA_VIEW.dsv', 
+                         sep = ';',
+                         chunksize = 100000,
+                         parse_dates = ['DAX'])
+                         #infer_datetime_format = True)
+    
+    if __name__ == '__main__':
+        df = pd.concat([process_data(chunk) for chunk in reader])
+    else:
+        for chunk in reader:
+            df = process_data(chunk)
+            break
+    
+    print('Load time: ', timeit.default_timer() - tic0)
+    
+    df.info()
+    
+    
+    tic0 = timeit.default_timer()
+    
+    df.to_pickle('../cache/c_clients.pkl')
+    #df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
+    
+    for d in df['DAX'].unique():
+        df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
+    
+    print('Save time: ', timeit.default_timer() - tic0)
 
-print('Load time: ', timeit.default_timer() - tic0)
 
-df.info()
-
-
-tic0 = timeit.default_timer()
-
-df.to_pickle('../cache/c_clients.pkl')
-#df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
-
-for d in df['DAX'].unique():
-    df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
-
-print('Save time: ', timeit.default_timer() - tic0)
-
+main()
