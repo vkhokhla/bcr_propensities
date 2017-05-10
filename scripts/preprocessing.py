@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import timeit
+import joblib
 
 segment_dict = {'MM':1, 'MA':2, 'PB':3 }
 
@@ -148,9 +149,10 @@ def main():
     tic0 = timeit.default_timer()
     
     for d in df['DAX'].unique():
-        df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
+        joblib.dump(df[df['DAX'] == d].values,
+                    '../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
 
-    df.to_pickle('../cache/c_clients.pkl')
+    joblib.dump(df.values, '../cache/c_clients.pkl')
     #df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
     
     print('Save time: ', timeit.default_timer() - tic0)
