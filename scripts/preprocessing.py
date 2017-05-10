@@ -59,14 +59,14 @@ def process_data(df):
     df['AGE'] = (df.DAX.dt.year * 12 + df.DAX.dt.month -
                  (df.BIRTH_DATE.dt.year * 12 + df.BIRTH_DATE.dt.month))
     df.loc[df['BIRTH_DATE'].dt.year <= 1900, 'AGE'] = None              # data quality
-    df['AGE'] = df['AGE'].fillna(-1).astype(np.uint16)
+    df['AGE'] = df['AGE'].fillna(-1).astype(np.int16)
     df.drop('BIRTH_DATE', axis = 1, inplace = True)
 
     df['CLIENT_START_DATE'] = pd.to_datetime(df['CLIENT_START_DATE'], errors='coerce', format='%Y-%m-%d')
     df['TENOR'] = ((df.DAX.dt.year - df.CLIENT_START_DATE.dt.year) * 12 +
                    (df.DAX.dt.month - df.CLIENT_START_DATE.dt.month))
     df.loc[df['CLIENT_START_DATE'].dt.year <= 1900, 'TENOR'] = None     # data quality
-    df['TENOR'] = df['TENOR'].fillna(-1).astype(np.uint16)
+    df['TENOR'] = df['TENOR'].fillna(-1).astype(np.int16)
     df.drop('CLIENT_START_DATE', axis = 1, inplace = True)
     
     df['GENDER'] = df['GENDER'].map(lambda x: gender_dict[x]).astype(np.int8)
@@ -110,16 +110,16 @@ def process_data(df):
     c_float16 = ['CM1_A', 'CM1_L', 'NFC', 'BALANCE_MAX_CAS', 'BALANCE_AVG_CAS']   
     df[c_float16] = df[c_float16].apply(np.float16)
 
-    df['BALANCE_MIN_CA_3MONTHS'] = df['BALANCE_MIN_CA_3MONTHS'].fillna(-1).astype(np.float16)
-    df['BALANCE_MAX_DEPOSITS_3MONTHS'] = df['BALANCE_MAX_DEPOSITS_3MONTHS'].fillna(-1).astype(np.float16)
+    df['BALANCE_MIN_CA_3MONTHS'] = df['BALANCE_MIN_CA_3MONTHS'].astype(np.float16)
+    df['BALANCE_MAX_DEPOSITS_3MONTHS'] = df['BALANCE_MAX_DEPOSITS_3MONTHS'].astype(np.float16)
     
     df['NO_SALARY'] = df['NO_SALARY'].fillna(-1).astype(np.int8)
     df['NO_CASH_LAST_MONTH'] = df['NO_CASH_LAST_MONTH'].fillna(-1).astype(np.int8)
     df['NO_OUTGOINGS_MONTH'] = df['NO_OUTGOINGS_MONTH'].fillna(-1).astype(np.int8)
 
-    df['SALARY'] = df['SALARY'].fillna(-1).astype(np.float16)
-    df['CASH_LAST_MONTH'] = df['CASH_LAST_MONTH'].fillna(-1).astype(np.float16)
-    df['OUTGOINGS_MONTH'] = df['OUTGOINGS_MONTH'].fillna(-1).astype(np.float16)
+    df['SALARY'] = df['SALARY'].astype(np.float16)
+    df['CASH_LAST_MONTH'] = df['CASH_LAST_MONTH'].astype(np.float16)
+    df['OUTGOINGS_MONTH'] = df['OUTGOINGS_MONTH'].astype(np.float16)
     
     return df
 
@@ -147,11 +147,11 @@ def main():
     
     tic0 = timeit.default_timer()
     
-    df.to_pickle('../cache/c_clients.pkl')
-    #df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
-    
     for d in df['DAX'].unique():
         df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
+
+    df.to_pickle('../cache/c_clients.pkl')
+    #df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
     
     print('Save time: ', timeit.default_timer() - tic0)
 
