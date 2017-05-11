@@ -88,20 +88,22 @@ def main():
     else:
         for chunk in reader:
             df = process_data(chunk)
+            df.info()
             break
     
     print('Load time: ', timeit.default_timer() - tic0)
-    
-    df.info()
-    
+  
     
     tic0 = timeit.default_timer()
     
     for d in df['DAX'].unique():
-        df[df['DAX'] == d].to_pickle('../cache/c_' + pd.to_datetime(str(d)).strftime('%Y%m') + '.pkl')
+        df[df['DAX'] == d].to_hdf('../cache/c_{file_name}.hdf'
+                                      .format(file_name=pd.to_datetime(str(d)).strftime('%Y%m')),
+                                  key='dump_months', format='fixed', mode='w',
+                                  complevel=5, complib='zlib')
 
-    df.to_pickle('../cache/c_clients.pkl')
-    #df.to_hdf('../data/processed/c_clients.hdf', 'dump', mode = 'w')
+    df.to_hdf('../cache/c_clients.hdf', key='dump_whole', mode='w', format='fixed', 
+              complevel=5, complib='zlib')
     
     print('Save time: ', timeit.default_timer() - tic0)
 
